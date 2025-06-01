@@ -192,3 +192,21 @@ def compute_confidence(df):
 def main():
     print("🚀 Advanced Forex Telegram Bot Started")
     while True:
+        for pair in FOREX_PAIRS:
+            print(f"📈 Checking {pair}...")
+            df = fetch_historical_data(pair)
+            if df is None or len(df) < 30:
+                print(f"[Skip] Not enough data for {pair}")
+                continue
+
+            df = calculate_indicators(df)
+            direction, confidence = compute_confidence(df)
+
+            if confidence >= CONFIDENCE_THRESHOLD:
+                message = f"📊 Signal for {pair}: {direction} ⚡ Confidence: {confidence:.2f}"
+                send_message(message)
+            else:
+                print(f"[No Signal] {pair}: Direction={direction}, Confidence={confidence:.2f}")
+
+        print(f"⏳ Waiting for next interval: {INTERVAL_SECONDS} sec")
+        time.sleep(INTERVAL_SECONDS)
