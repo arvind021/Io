@@ -10,7 +10,7 @@ from ta.others import DonchianChannel
 from telegram import Bot
 
 # ====== CONFIGURATION =======
-POLYGON_API_KEY = "YOUR_POLYGON_API_KEY"
+POLYGON_API_KEY = "ZTppfs8VAEPg6EPEhB0_8xtbzC0mjT0m"
 TELEGRAM_BOT_TOKEN = "8030718150:AAFp5QuwaC-103ruvB5TsBMGY5MwMvkq-5g"
 TELEGRAM_CHAT_ID = "@iopuygy"
 
