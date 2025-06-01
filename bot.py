@@ -191,4 +191,4 @@ def compute_confidence(df):
 
 def main():
     print("🚀 Advanced Forex Telegram Bot Started")
-    while True
+    while True:
