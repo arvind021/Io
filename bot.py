@@ -6,7 +6,6 @@ from ta.momentum import RSIIndicator, StochasticOscillator
 from ta.trend import MACD, ADXIndicator, CCIIndicator
 from ta.volatility import BollingerBands, KeltnerChannel, AverageTrueRange
 from ta.volume import OnBalanceVolumeIndicator, MFIIndicator
-from ta.others import DonchianChannel
 from telegram import Bot
 
 # ====== CONFIGURATION =======
@@ -59,6 +58,15 @@ def fetch_historical_data(pair, limit=100):
         return None
 
 
+def calculate_donchian_channel(df, window=20):
+    """
+    Manually calculate Donchian Channel bands (high and low)
+    """
+    df['donchian_high'] = df['high'].rolling(window=window).max()
+    df['donchian_low'] = df['low'].rolling(window=window).min()
+    return df
+
+
 def calculate_indicators(df):
     """
     Calculate 15+ technical indicators and add as columns to df
@@ -89,10 +97,8 @@ def calculate_indicators(df):
     df['obv'] = OnBalanceVolumeIndicator(close=df['close'], volume=df['volume']).on_balance_volume()
     df['mfi'] = MFIIndicator(high=df['high'], low=df['low'], close=df['close'], volume=df['volume'], window=14).money_flow_index()
 
-    # Other Indicators
-    donchian = DonchianChannel(high=df['high'], low=df['low'], window=20)
-    df['donchian_high'] = donchian.donchian_channel_hband()
-    df['donchian_low'] = donchian.donchian_channel_lband()
+    # Other Indicators - Use manual Donchian Channel
+    df = calculate_donchian_channel(df, window=20)
 
     return df
 
@@ -207,11 +213,23 @@ def main():
                 print(f"{pair}: Direction={direction}, Confidence={confidence:.2f}")
 
                 if confidence >= CONFIDENCE_THRESHOLD:
-                    msg = f"📈 Signal for {pair}:\nDirection: {direction}\nConfidence: {confidence:.2f}"
-                    send_message(msg)
+                    message = (f"Forex Signal for {pair}:\n"
+                               f"Direction: {direction}\n"
+                               f"Confidence: {confidence:.2f}\n"
+                               f"Timestamp: {df.index[-1]}")
+                    send_message(message)
 
+            print(f"Waiting {INTERVAL_SECONDS} seconds before next check...\n")
             time.sleep(INTERVAL_SECONDS)
 
+        except KeyboardInterrupt:
+            print("Exiting bot...")
+            break
+
         except Exception as e:
-            print(f"[Loop Error] {e}")
-            time.sleep(10)
+            print(f"[Error] Exception occurred: {e}")
+            time.sleep(10)  # Wait 10 seconds before retrying
+
+
+if __name__ == "__main__":
+    main()
