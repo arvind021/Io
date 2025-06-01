@@ -31,28 +31,28 @@ def send_message(text):
         print(f"[Telegram Error] {e}")
 
 
-def fetch_historical_data(pair, limit=100):
-    """
-    Fetch historical 1-minute candle data for the last 'limit' candles from Polygon.io
-    """
-    ticker = f"C:{pair}"
-    url = f"https://api.polygon.io/v2/aggs/ticker/{ticker}/range/1/minute/now-100minute/now?adjusted=true&sort=asc&limit={limit}&apiKey={POLYGON_API_KEY}"
+def fetch_candles(pair):
+    url_pair = f"C:{pair}"
+    
+    # Set 'to' and 'from' timestamps
+    now = datetime.datetime.utcnow()
+    past = now - datetime.timedelta(minutes=100)
+
+    to_str = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    from_str = past.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    url = f"https://api.polygon.io/v2/aggs/ticker/{url_pair}/range/1/minute/{from_str}/{to_str}?adjusted=true&sort=asc&limit=100&apiKey={API_KEY}"
+    
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-
-        if "results" not in data:
-            print(f"[Data Error] No results for {pair}")
+        if "results" not in data or not data["results"]:
+            print(f"[Warning] No data for {pair}")
             return None
-
         df = pd.DataFrame(data["results"])
-        # Rename columns for convenience
-        df.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}, inplace=True)
-        df["timestamp"] = pd.to_datetime(df["timestamp"], unit='ms')
-        df.set_index("timestamp", inplace=True)
+        df["timestamp"] = pd.to_datetime(df["t"], unit="ms")
         return df
-
     except Exception as e:
         print(f"[Fetch Error] {pair}: {e}")
         return None
